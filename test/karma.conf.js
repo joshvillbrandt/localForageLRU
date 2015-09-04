@@ -16,7 +16,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       // required libraries
-      'bower_components/localforage/disy/localforage.js',
+      'bower_components/localforage/dist/localforage.js',
 
       // code under test
       'src/*.js',
