@@ -1,0 +1,21 @@
+{
+  "name": "localForageLRU",
+  "version": "1.0.0",
+  "homepage": "https://github.com/joshvillbrandt/localForageLRU",
+  "authors": [
+    "Josh Villbrandt <josh@javconcepts.com>"
+  ],
+  "description": "A wrapper around localForage that provides an LRU cache behavior.",
+  "main": "src/localforagelru.js",
+  "license": "MIT",
+  "dependencies": {
+    "localforage": "~1.2.10"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
