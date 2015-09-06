@@ -144,7 +144,7 @@ describe('localForageLRU', function() {
 
       localforagelru.setItem(recencyKey, 'value')
       .then(function(){
-        expect('promise').not.toBe('resolved');
+        expect('promise').toBe('rejected');
         done();
       }, done);
     });
@@ -172,8 +172,19 @@ describe('localForageLRU', function() {
   });
 
   describe('removeItem()', function() {
-    it('should remove the item from the recency list as well', function() {
+    it('should remove the item from the recency list as well', function(done) {
+      // approach:
+      //  - set two items
+      //  - make sure the order of the recency list is correct
+      //  - remove the first item
+      //  - make sure the order of the recency list has changed
 
+      localforagelru.setItem('a', 'value')
+      .then(function() { return localforagelru.setItem('b', 'value'); })
+      .then(expectRecencyOrder(localforagelru, ['a', 'b']))
+      .then(function() { return localforagelru.removeItem('a'); })
+      .then(expectRecencyOrder(localforagelru, ['b']))
+      .then(done, done);
     });
   });
 });

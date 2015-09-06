@@ -113,6 +113,28 @@
       return promise;
     };
 
+    // override getItem() function
+    LocalForageLRU.getItem = function(key, callback) {
+      var self = this;
+
+      var promise = new Promise(function(resolve, reject) {
+        // call the localForage getItem
+        Object.getPrototypeOf(self).getItem.call(self, key)
+
+        // then update the recency list
+        .then(function(value) {
+          self._updateRecency(key)
+          .then(function() {
+            // return the initial value like localForage does
+            resolve(value);
+          }, function(reason) { reject(reason); });
+        }, function(reason) { reject(reason); });
+      });
+
+      executeCallback(promise, callback);
+      return promise;
+    };
+
     // override setItem() function
     LocalForageLRU.setItem = function(key, value, callback) {
       var self = this;
@@ -140,17 +162,17 @@
       return promise;
     };
 
-    // override getItem() function
-    LocalForageLRU.getItem = function(key, callback) {
+    // override removeItem() function
+    LocalForageLRU.removeItem = function(key, callback) {
       var self = this;
 
       var promise = new Promise(function(resolve, reject) {
-        // call the localForage getItem
-        Object.getPrototypeOf(self).getItem.call(self, key)
+        // call the localForage removeItem
+        Object.getPrototypeOf(self).removeItem.call(self, key)
 
         // then update the recency list
         .then(function(value) {
-          self._updateRecency(key)
+          self._updateRecency(key, true)
           .then(function() {
             // return the initial value like localForage does
             resolve(value);
