@@ -17,12 +17,16 @@ module.exports = function(config) {
     files: [
       // required libraries
       'bower_components/localforage/dist/localforage.js',
+      'bower_components/q/q.js',
 
       // code under test
       'src/*.js',
 
+      // mocks
+      'test/*.mock.js',
+
       // tests
-      'test/*.js',
+      'test/*.spec.js',
     ],
 
 

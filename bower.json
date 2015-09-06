@@ -11,6 +11,9 @@
   "dependencies": {
     "localforage": "~1.2.10"
   },
+  "devDependencies": {
+    "q": "~1.0.1"
+  },
   "ignore": [
     "**/.*",
     "node_modules",
