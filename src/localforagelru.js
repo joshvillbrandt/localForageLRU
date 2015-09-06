@@ -47,7 +47,6 @@
 
       // return promise;
       // console.log(Object.keys(this))
-      console.log('shoveItem()', key, value)
       return Object.getPrototypeOf(this).setItem.call(this, key, value);
     };
 
@@ -96,7 +95,6 @@
           // remove the key if it already exists
           var index = self._recency.indexOf(key);
           if(index !== -1) {
-            console.warn('TRYING TO SPLICE', self._recency, 'for', key, index)
             self._recency.splice(index, 1);
           }
 
@@ -106,6 +104,7 @@
           }
 
           // save the recency list for future sessions
+          // TODO: debounce this write for performance
           self._shoveItem(self._config.recencyKey, self._recency).then(resolve, reject);
         }, reject);
       });

@@ -31,13 +31,6 @@ describe('localForageLRU', function() {
     };
   };
 
-  // // helper to set item
-  // var setItem = function(store, key, value) {
-  //   return function() {
-  //     store.setItem(key, value);
-  //   };
-  // };
-
   beforeEach(function(){
     localforagelru.clear();
   });
@@ -133,7 +126,7 @@ describe('localForageLRU', function() {
       .then(done, done);
     });
 
-    it('should automatically remove the least recently used items as necessary to make room for new items', function() {
+    xit('should automatically remove the least recently used items as necessary to make room for new items', function() {
 
     });
 
