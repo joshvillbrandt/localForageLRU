@@ -6,20 +6,29 @@ A wrapper around `localForage` that provides an LRU cache behavior.
 
 ## Background
 
-This library seeks to provide a local storage interface for web browsers that can tolerate very large database sizes. A least recently used policy is implemented on top of [localForage](https://github.com/mozilla/localForage). The API for `localForageLRU` is exactly the same as it is for `localForage` - the only difference is that old objects are removed as necessary to put in new objects.
+This library seeks to provide a local storage interface for web browsers that can tolerate very large database sizes. A least recently used (LRU) policy is implemented on top of [localForage](https://github.com/mozilla/localForage). The API for `localForageLRU` is exactly the same as it is for `localForage` - the only difference is that old objects are removed as necessary to put in new objects.
 
 ## Setup
 
 Install with bower:
 
 ```bash
-bower install localforage-lru --save
+bower install localforagelru --save
 ```
 
 ## Usage
 
+Good news, everyone! The API for `localForageLRU` is exactly the same as it is for `localForage`. Both the callback and promise methods are supported. Check out the [localForage README](https://github.com/mozilla/localForage) and [localForage API docs](http://mozilla.github.io/localForage/) for detailed API information.
+
+Here is an example usage using the promise methods:
+
 ```javascript
-// tbd
+// A full setItem() call with Promises.
+localforage.setItem('key', 'value').then(function(value) {
+    alert(value + ' was set!');
+}, function(error) {
+    console.error(error);
+});
 ```
 
 ## Development
@@ -39,6 +48,6 @@ npm test
 
 This project uses [semantic versioning](http://semver.org/).
 
-### 1.0.0 - 2015/09/04
+### 1.0.0 - 2015/09/07
 
 * Initial release.

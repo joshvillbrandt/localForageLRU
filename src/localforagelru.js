@@ -32,6 +32,13 @@
     // create LocalForage instance with particular options to prototype from
     LocalForageLRU.prototype = localforage.createInstance(options);
 
+    // log function that respects options.debugLRU
+    LocalForageLRU._debugLRU = function() {
+      if(this._config.debugLRU) {
+        console.info.apply(null, arguments);
+      }
+    };
+
     // an implementation of setItem to removes items when the quota is reached
     LocalForageLRU._shoveItem = function(key, value) {
       // var promise = new Promise(function(resolve, reject) {
@@ -40,6 +47,7 @@
 
       // return promise;
       // console.log(Object.keys(this))
+      console.log('shoveItem()', key, value)
       return Object.getPrototypeOf(this).setItem.call(this, key, value);
     };
 
@@ -54,14 +62,14 @@
 
         // recency list is not in memory, let's grab it
         else {
-          self.getItem(self._config.recencyKey).then(function(_recency) {
+          // directly use the localForage getItem to avoid updating the recency list
+          Object.getPrototypeOf(self).getItem.call(self, self._config.recencyKey)
+          .then(function(_recency) {
             // init recency list if needed
             if(_recency === null) {
               _recency = [];
 
-              if(self._config.debugLRU) {
-                console.info('recency list initialized for "' + self._config.storeName + '"');
-              }
+              self._debugLRU('LRU "' + self._config.storeName + '" initialized');
             }
 
             // store the result locally
@@ -86,6 +94,11 @@
         // get list
         self._getRecency().then(function() {
           // remove the key if it already exists
+          var index = self._recency.indexOf(key);
+          if(index !== -1) {
+            console.warn('TRYING TO SPLICE', self._recency, 'for', key, index)
+            self._recency.splice(index, 1);
+          }
 
           // add key to the end of the LRU list
           if(!remove) {
@@ -105,23 +118,57 @@
       var self = this;
 
       var promise = new Promise(function(resolve, reject) {
-        // set the item itself first
-        var itemPromise = self._shoveItem(key, value);
+        // do not let the client accidentally modify the recency list
+        if(key === self._config.recencyKey) {
+          reject('Cannot use the same key as the recency list');
+        }
+        else {
+          // set the item itself first
+          self._shoveItem(key, value)
 
-        // then update the recency list
-        itemPromise.then(function() {
-          var recencyPromise = self._updateRecency(key);
-
-          // then we are done!
-          recencyPromise.then(function() {
-            // return the initial value like localForage does
-            resolve(value);
-          }, reject);
-        }, reject);
+          // then update the recency list
+          .then(function() {
+            self._updateRecency(key).then(function() {
+              // return the initial value like localForage does
+              resolve(value);
+            }, function(reason) { reject(reason); });
+          }, function(reason) { reject(reason); });
+        }
       });
 
       executeCallback(promise, callback);
       return promise;
+    };
+
+    // override getItem() function
+    LocalForageLRU.getItem = function(key, callback) {
+      var self = this;
+
+      var promise = new Promise(function(resolve, reject) {
+        // call the localForage getItem
+        Object.getPrototypeOf(self).getItem.call(self, key)
+
+        // then update the recency list
+        .then(function(value) {
+          self._updateRecency(key)
+          .then(function() {
+            // return the initial value like localForage does
+            resolve(value);
+          }, function(reason) { reject(reason); });
+        }, function(reason) { reject(reason); });
+      });
+
+      executeCallback(promise, callback);
+      return promise;
+    };
+
+    // override prototype.clear() function
+    LocalForageLRU.clear = function(options) {
+      // make sure we clear the in-memory recency list
+      delete this._recency;
+
+      // then let localForage clear the actual store
+      return Object.getPrototypeOf(this).clear.call(this);
     };
 
     // override prototype.createInstance() function
