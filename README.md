@@ -22,7 +22,7 @@ bower install localforage-lru --save
 
 ## Development
 
-This repo is testing with node 0.10. If you don't have node, first install it with [nvm](https://github.com/creationix/nvm).
+This library has been developed with node 0.10. If you don't have node, first install it with [nvm](https://github.com/creationix/nvm).
 
 Here is how to checkout the code, install the dependencies, and run the tests:
 
