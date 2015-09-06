@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/joshvillbrandt/localForageLRU.svg?branch=master)](https://travis-ci.org/joshvillbrandt/localForageLRU)
+
 # localForageLRU
 
 A wrapper around `localForage` that provides an LRU cache behavior.

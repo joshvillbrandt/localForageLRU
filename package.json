@@ -4,6 +4,7 @@
   "description": "A wrapper around localForage that provides an LRU cache behavior.",
   "main": "src/localforagelru.js",
   "devDependencies": {
+    "bower": ">1.0",
     "jasmine-core": "~2.3.4",
     "karma": "~0.12.16",
     "karma-chrome-launcher": "~0.1.3",
