@@ -18,18 +18,23 @@ bower install localforagelru --save
 
 ## Usage
 
-Good news, everyone! The API for `localForageLRU` is exactly the same as it is for `localForage`. Callback and promise patterns are both supported. Check out the [localForage README](https://github.com/mozilla/localForage) and [localForage API docs](http://mozilla.github.io/localForage/) for detailed API information.
+Good news, everyone! The API for `localForageLRU` is exactly the same as it is for `localForage` - simply use the `localforagelru` global instead of the `localforage` global. Callback and promise patterns are both supported. Check out the [localForage README](https://github.com/mozilla/localForage) and [localForage API docs](http://mozilla.github.io/localForage/) for detailed API information.
 
-Here is an example usage using the promise methods:
+Here is an example using the promise pattern:
 
 ```javascript
 // A full setItem() call with Promises.
-localforage.setItem('key', 'value').then(function(value) {
+localforagelru.setItem('key', 'value').then(function(value) {
     alert(value + ' was set!');
 }, function(error) {
     console.error(error);
 });
 ```
+
+Behind the scenes, `localForageLRU` listens for "over quota" errors and removes least recently used items from the data store until the requested object can fit into the data store. In addition to the standard `localForage` configuration options, `localForageLRU` supports two additional options:
+
+* recencyKey - this is used as the key to store the recency list; defaults to an empty string
+* debugLRU - set this to `true` to see when objects get kicked out of the store; defaults to `false`
 
 ## Development
 
@@ -48,6 +53,11 @@ npm test
 
 This project uses [semantic versioning](http://semver.org/).
 
-### 1.0.0 - 2015/09/07
+### 1.1.0 - 2015/09/07
 
-* Initial release.
+* Fix package name for bower case sensitivity
+* Remove in-memory of copy of recency list to concurrency errors because of multiple clients
+
+### 1.0.0 - 2015/09/06
+
+* Initial release
