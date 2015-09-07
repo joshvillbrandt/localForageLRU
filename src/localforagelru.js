@@ -55,11 +55,13 @@
           }
 
           // attempt to remove the first item in the recency list
-          self.removeItem(_recency[0]).then(function() {
-            self._debugLRU('LRU "' + self._config.storeName + '" over quota; item removed');
+          else {
+            self.removeItem(_recency[0]).then(function() {
+              self._debugLRU('LRU "' + self._config.storeName + '" over quota; item removed');
 
-            resolve();
-          }, reject);
+              resolve();
+            }, reject);
+          }
         }, reject);
       });
 
@@ -78,7 +80,7 @@
           .setItem.call(self, key, value)
           .then(resolve, function(error) {
             // try to remove old cache items if we are over quota
-            if(error.name == 'QuotaExceededError') {
+            if(error !== undefined && error.name !== undefined && error.name == 'QuotaExceededError') {
               // setItem failed! let's try to remove the LRU item
               self._shiftItem().then(function() {
                 // continue loop; try setItem again!

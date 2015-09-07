@@ -1,5 +1,5 @@
 describe('localForageLRU', function() {
-  var recencyKey = ''; // unchanged from default settings
+  var recencyKey = '_localforagelru_recency'; // unchanged from default settings
 
   // helper to evaluate number of items in the data store
   var expectStoreLength = function(store, expectedLength) {
