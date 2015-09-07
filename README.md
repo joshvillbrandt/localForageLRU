@@ -18,7 +18,7 @@ bower install localforagelru --save
 
 ## Usage
 
-Good news, everyone! The API for `localForageLRU` is exactly the same as it is for `localForage`. Both the callback and promise methods are supported. Check out the [localForage README](https://github.com/mozilla/localForage) and [localForage API docs](http://mozilla.github.io/localForage/) for detailed API information.
+Good news, everyone! The API for `localForageLRU` is exactly the same as it is for `localForage`. Callback and promise patterns are both supported. Check out the [localForage README](https://github.com/mozilla/localForage) and [localForage API docs](http://mozilla.github.io/localForage/) for detailed API information.
 
 Here is an example usage using the promise methods:
 
