@@ -27,7 +27,7 @@
     // set some default options
     options = options || {};
     options.recencyKey = options.recencyKey || '';
-    options.debugLRU = options.debugLRU || true;
+    options.debugLRU = options.debugLRU || false;
 
     // create LocalForage instance with particular options to prototype from
     LocalForageLRU.prototype = localforage.createInstance(options);
@@ -39,15 +39,54 @@
       }
     };
 
+    // try to remove the least recently used item
+    LocalForageLRU._shiftItem = function() {
+      var self = this;
+
+      var promise = new Promise(function(resolve, reject) {
+        self._getRecency().then(function(_recency) {
+          // cannot remove item if there are none
+          if(_recency.length < 1) {
+            reject();
+          }
+
+          // attempt to remove the first item in the recency list
+          self.removeItem(_recency[0]).then(function() {
+            self._debugLRU('LRU "' + self._config.storeName + '" over quota; item removed');
+
+            resolve();
+          }, reject);
+        }, reject);
+      });
+
+      return promise;
+    };
+
     // an implementation of setItem to removes items when the quota is reached
     LocalForageLRU._shoveItem = function(key, value) {
-      // var promise = new Promise(function(resolve, reject) {
+      var self = this;
 
-      // });
+      var promise = new Promise(function(resolve, reject) {
+        // this is the recursive function
+        var setItemOrRemoveAndTryAgain = function() {
+          // use actual setItem class
+          Object.getPrototypeOf(self)
+          .setItem.call(self, key, value)
+          .then(resolve, function(reason) {
+            // setItem failed! let's try to remove the LRU item
+            // stop trying if this command fails (store is probably empty)
+            self._shiftItem().then(function() {
+              // continue loop; try setItem again!
+              setItemOrRemoveAndTryAgain();
+            }, reject);
+          });
+        };
 
-      // return promise;
-      // console.log(Object.keys(this))
-      return Object.getPrototypeOf(this).setItem.call(this, key, value);
+        // start the loop
+        setItemOrRemoveAndTryAgain();
+      });
+
+      return promise;
     };
 
     LocalForageLRU._getRecency = function() {
@@ -91,16 +130,16 @@
 
       var promise = new Promise(function(resolve, reject) {
         // get list
-        self._getRecency().then(function() {
+        self._getRecency().then(function(_recency) {
           // remove the key if it already exists
           var index = self._recency.indexOf(key);
           if(index !== -1) {
-            self._recency.splice(index, 1);
+            _recency.splice(index, 1);
           }
 
           // add key to the end of the LRU list
           if(!remove) {
-            self._recency.push(key);
+            _recency.push(key);
           }
 
           // save the recency list for future sessions

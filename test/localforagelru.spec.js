@@ -22,6 +22,7 @@ describe('localForageLRU', function() {
       var promise = store._getRecency();
 
       promise.then(function(recency) {
+        // console.log('expectRecencyOrder', recency, 'toBe', expectedOrder)
         expect(recency).toEqual(expectedOrder);
       }, function() {
         expect('store._getRecency()').toBe('successful');
@@ -31,8 +32,12 @@ describe('localForageLRU', function() {
     };
   };
 
-  beforeEach(function(){
+  beforeEach(function(done){
+    // clear the default database
     localforagelru.clear();
+
+    // make sure that our mock driver is available
+    tenCharQuotaStorePromise.then(done);
   });
 
   it('should export a localforagelru object', function() {
@@ -63,8 +68,6 @@ describe('localForageLRU', function() {
       // create stores
       var store = localforagelru.createInstance({name: 'nameHere'});
       var otherStore = localforagelru.createInstance({name: 'otherName'});
-
-      // make sure these stores are clear from previous tests
       store.clear();
       otherStore.clear();
 
@@ -94,7 +97,7 @@ describe('localForageLRU', function() {
       //  - make sure two items are in the store (added items + recency list)
 
       localforagelru.setItem('key', 'value')
-      .then(expectStoreLength(localforagelru, 2))
+      .then(expectStoreLength(localforagelru, 1 + 1))
       .then(done, done);
     });
 
@@ -106,7 +109,7 @@ describe('localForageLRU', function() {
 
       localforagelru.setItem('a', 'value')
       .then(function() { return localforagelru.setItem('b', 'value'); })
-      .then(expectStoreLength(localforagelru, 3))
+      .then(expectStoreLength(localforagelru, 2 + 1))
       .then(expectRecencyOrder(localforagelru, ['a', 'b']))
       .then(done, done);
     });
@@ -126,8 +129,59 @@ describe('localForageLRU', function() {
       .then(done, done);
     });
 
-    xit('should automatically remove the least recently used items as necessary to make room for new items', function() {
+    it('should automatically remove the least recently used items as necessary to make room for new items', function(done) {
+      // approach:
+      //  - init store with two items that are under the limit
+      //    - make sure the order of the recency list is correct
+      //  - add a third item that forces one item to be removed
+      //    - make sure the oldest item was removed
+      //  - add a forth item that is under the limit
+      //    - make sure nothing was removed
+      //  - add a fifth item that forces multiple items to be removed
+      //    - make sure multiple items were removed
 
+      // use ten char quota store to simulate quota failures
+      var store = localforagelru.createInstance({
+        name: 'tenCharQuotaStore',
+        driver: 'tenCharQuotaStore',
+      });
+      expect(store._driver).toBe('tenCharQuotaStore');
+      store.clear();
+
+      store.setItem('a', '12345')
+      .then(function() { return store.setItem('b', '1234'); })
+      .then(expectStoreLength(store, 2 + 1))
+      .then(expectRecencyOrder(store, ['a', 'b']))
+      .then(function() { return store.setItem('c', '12'); })
+      .then(expectStoreLength(store, 2 + 1))
+      .then(expectRecencyOrder(store, ['b', 'c']))
+      .then(function() { return store.setItem('d', '12'); })
+      .then(expectStoreLength(store, 3 + 1))
+      .then(expectRecencyOrder(store, ['b', 'c', 'd']))
+      .then(function() { return store.setItem('e', '123456789'); })
+      .then(expectStoreLength(store, 1 + 1))
+      .then(expectRecencyOrder(store, ['e']))
+      .then(done, done);
+    });
+
+    it('should not cause an endless loop if the item is too big for the database', function(done) {
+      // approach:
+      //  - try to add an item that is too big
+      //  - make sure we fail gracefully
+
+      // use ten char quota store to simulate quota failures
+      var store = localforagelru.createInstance({
+        name: 'tenCharQuotaStore',
+        driver: 'tenCharQuotaStore',
+      });
+      expect(store._driver).toBe('tenCharQuotaStore');
+      store.clear();
+
+      store.setItem('a', '12345678901234567890')
+      .then(function(){
+        expect('promise').toBe('rejected');
+        done();
+      }, done);
     });
 
     it('should error if the client tries to use the recency key', function(done) {
