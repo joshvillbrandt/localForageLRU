@@ -1,6 +1,6 @@
 {
-  "name": "localForageLRU",
-  "version": "1.0.0",
+  "name": "localforagelru",
+  "version": "1.1.0",
   "homepage": "https://github.com/joshvillbrandt/localForageLRU",
   "authors": [
     "Josh Villbrandt <josh@javconcepts.com>"
