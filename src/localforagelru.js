@@ -30,7 +30,7 @@
 
     // set some default options
     options = options || {};
-    options.recencyKey = options.recencyKey || '';
+    options.recencyKey = options.recencyKey || '_localforagelru_recency';
     options.debugLRU = options.debugLRU || false;
 
     // create LocalForage instance with particular options to prototype from
@@ -39,7 +39,7 @@
     // log function that respects options.debugLRU
     LocalForageLRU._debugLRU = function() {
       if(this._config.debugLRU) {
-        console.info.apply(null, arguments);
+        console.info.apply(console, arguments);
       }
     };
 
@@ -76,13 +76,20 @@
           // use actual setItem class
           Object.getPrototypeOf(self)
           .setItem.call(self, key, value)
-          .then(resolve, function(reason) {
-            // setItem failed! let's try to remove the LRU item
-            // stop trying if this command fails (store is probably empty)
-            self._shiftItem().then(function() {
-              // continue loop; try setItem again!
-              setItemOrRemoveAndTryAgain();
-            }, reject);
+          .then(resolve, function(error) {
+            // try to remove old cache items if we are over quota
+            if(error.name == 'QuotaExceededError') {
+              // setItem failed! let's try to remove the LRU item
+              self._shiftItem().then(function() {
+                // continue loop; try setItem again!
+                setItemOrRemoveAndTryAgain();
+              }, reject);
+            }
+
+            // stop trying if we failed for a different reason
+            else {
+              reject(error);
+            }
           });
         };
 
@@ -241,36 +248,50 @@
   // TODO: use grown-up module pattern instead of this global
   window.localforagelru = createLocalForageLRU();
 
-  // create stress test function
-  var stressTest = function(store, sizeInMegs, prefix) {
-    prefix = prefix || '';
+  // stress test function
+  window.localforageStressTester = function(store, endKey, startKey) {
+    return new Promise(function(resolve, reject) {
 
-    // create "one meg" from 1e6 bytes
-    var oneMeg = '';
-    for(var j = 0; j < 1000000; j++) {
-      oneMeg = oneMeg += '1234567890';
-    }
+      // create "one meg" from 1e6 bytes
+      var oneMeg = '';
+      for(var j = 0; j < 1000000; j++) {
+        oneMeg = oneMeg += '1234567890';
+      }
 
-    var i = 0;
+      var i = startKey || 0;
 
-    var set = function(){
-      var key = prefix + String(i);
-      store.setItem(key, oneMeg).then(function(){
-        console.log('setItem done');
-
-        i = i + 1;
-        if(i < sizeInMegs) {
-          set();
+      var set = function() {
+        if(i < endKey) {
+          var key = String(i);
+          store.setItem(key, oneMeg).then(function(){
+            console.log('setItem success');
+            i = i + 1;
+            set();
+          }, function(error) {
+            console.log('setItem failure', error);
+            resolve();
+          });
         }
-      }, function(err) {
-        console.log('setItem error', err);
-      });
-    };
+        else {
+          resolve();
+        }
+      };
 
-    set();
+      console.log('Starting stress test starting at key ' + String(i));
+      set();
+    });
   };
 
-  // export stress test
-  window.localforageStressTester = stressTest;
+  // print length to console, because typing this in the console is annoying
+  window.localforagePrintLength = function(store) {
+    console.log('Requesting store length. This could take a minute...');
+    var promise = store.length();
+
+    promise.then(function(length) {
+      console.log('Store has ' + String(length) + ' objects.');
+    });
+
+    return promise;
+  };
 
 })(window, localforage);
